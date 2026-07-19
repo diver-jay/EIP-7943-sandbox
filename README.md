@@ -2,30 +2,9 @@
 
 This repository is a test and study project for **EIP-7943 (uRWA - Universal Real-World Asset Interface)**, implementing a standard interface for permissioned, regulatory-compliant assets (e.g., securities, real estate, commodities) on EVM-compatible blockchains. 
 
-It is built using the **Hardhat 2** development framework, **Solidity 0.8.24** (targeting the Cancun EVM upgrade), and **OpenZeppelin Contracts v5**.
-
 ---
 
-## 📌 Key Features (EIP-7943 Primitives)
-
-1. **User Eligibility Control (Gating & Whitelisting)**
-   - `canTransact(address)`: Checks if an account is eligible to hold or interact with tokens (e.g., has passed KYC/AML checks).
-   - `canTransfer(address, address, uint256)`: Pre-flight function to check whether a transfer between two addresses is permitted under current regulatory rules.
-
-2. **Asset Freezing (Operational Controls)**
-   - `setFrozenTokens(address, uint256)`: Freezes a specific amount of tokens for an account.
-   - `getFrozenTokens(address)`: Returns the amount of frozen tokens for an account.
-   - The token holder is only permitted to transfer their **unfrozen balance** (`balanceOf(user) - getFrozenTokens(user)`).
-
-3. **Forced Transfer (Law Enforcement & Recovery)**
-   - `forcedTransfer(address, address, uint256)`: Allows an authorized entity (e.g., a regulator or compliance officer) to move assets unilaterally without the token holder's signature. This is used for lost key recovery, compliance audits, or court-ordered asset seizures. Forced transfers bypass frozen checks but still check the destination's eligibility.
-
-4. **ERC-165 Introspection**
-   - Implements `supportsInterface` so that external routers, bridges, and custodians can dynamically inspect which uRWA interface variant (Fungible, NonFungible, MultiToken) is implemented.
-
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```text
 EIP-7943/
@@ -47,7 +26,7 @@ EIP-7943/
 
 ---
 
-## 🛠️ Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 Install all required node packages and OpenZeppelin libraries:
@@ -72,7 +51,7 @@ npm test
 
 ---
 
-## 🔍 Test Scenarios Covered
+## Test Scenarios Covered
 
 The unit tests (`test/uRWA.test.js`) cover:
 
@@ -88,3 +67,21 @@ The unit tests (`test/uRWA.test.js`) cover:
   - `IERC7943NonFungible` (Interface ID: `0xa8fdc849`)
   - `IERC7943MultiToken` (Interface ID: `0x5627c61a`)
 
+---
+
+## Key Features (EIP-7943 Primitives)
+
+1. **User Eligibility Control (Gating & Whitelisting)**
+   - `canTransact(address)`: Checks if an account is eligible to hold or interact with tokens (e.g., has passed KYC/AML checks).
+   - `canTransfer(address, address, uint256)`: Pre-flight function to check whether a transfer between two addresses is permitted under current regulatory rules.
+
+2. **Asset Freezing (Operational Controls)**
+   - `setFrozenTokens(address, uint256)`: Freezes a specific amount of tokens for an account.
+   - `getFrozenTokens(address)`: Returns the amount of frozen tokens for an account.
+   - The token holder is only permitted to transfer their **unfrozen balance** (`balanceOf(user) - getFrozenTokens(user)`).
+
+3. **Forced Transfer (Law Enforcement & Recovery)**
+   - `forcedTransfer(address, address, uint256)`: Allows an authorized entity (e.g., a regulator or compliance officer) to move assets unilaterally without the token holder's signature. This is used for lost key recovery, compliance audits, or court-ordered asset seizures. Forced transfers bypass frozen checks but still check the destination's eligibility.
+
+4. **ERC-165 Introspection**
+   - Implements `supportsInterface` so that external routers, bridges, and custodians can dynamically inspect which uRWA interface variant (Fungible, NonFungible, MultiToken) is implemented.
