@@ -88,7 +88,3 @@ The unit tests (`test/uRWA.test.js`) cover:
   - `IERC7943NonFungible` (Interface ID: `0xa8fdc849`)
   - `IERC7943MultiToken` (Interface ID: `0x5627c61a`)
 
----
-
-## ⚠️ Security Notice
-This project is created strictly for **study and demonstration purposes**. The smart contracts provided have not undergone a professional security audit. Do not deploy these contracts to any public production environment without proper auditing and validation.
