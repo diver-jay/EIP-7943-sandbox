@@ -51,24 +51,6 @@ npm test
 
 ---
 
-## Test Scenarios Covered
-
-The unit tests (`test/uRWA.test.js`) cover:
-
-- **`ComplianceRegistry`**: Admin updates whitelist status and configures country-specific jurisdictions (e.g., blocking or permitting French/US residents).
-- **`ERC20uRWA`**:
-  - Gated Minting: Blocks minting to non-whitelisted users.
-  - Frozen Balances: Blocks transfers that exceed a user's unfrozen balance.
-  - Forced Transfers: Verifies the compliance manager can unilaterally transfer frozen tokens and that the frozen amount is dynamically adjusted if the sender's balance drops below their freeze threshold.
-- **`ERC721uRWA` / `ERC1155uRWA`**:
-  - Validates equivalent non-fungible/multi-token RWA operations (freezing individual token IDs and executing forced transfers).
-- **ERC-165 Interface Inspection**:
-  - `IERC7943Fungible` (Interface ID: `0x29388973`)
-  - `IERC7943NonFungible` (Interface ID: `0xa8fdc849`)
-  - `IERC7943MultiToken` (Interface ID: `0x5627c61a`)
-
----
-
 ## Key Features (EIP-7943 Primitives)
 
 1. **User Eligibility Control (Gating & Whitelisting)**
