@@ -1,0 +1,19 @@
+# Hardhat files
+artifacts/
+cache/
+
+# Dependencies
+node_modules/
+
+# Env files
+.env
+
+# Coverage reports
+coverage/
+coverage.json
+
+# Cache and logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
