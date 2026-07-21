@@ -4,6 +4,67 @@ This repository is a test and study project for **EIP-7943 (uRWA - Universal Rea
 
 ---
 
+## Architecture & Flow Diagrams
+
+### EIP-7943 Architecture
+![EIP-7943 Architecture](./EIP-7943.png)
+
+---
+
+### Core Flowcharts
+
+#### 1. Compliance Transfer Flow (일반 전송 및 규제 검증 흐름)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Alice as 송신자 (Alice)
+    participant Token as uRWA Token (ERC20uRWA)
+    participant Registry as Compliance Registry
+    actor Bob as 수신자 (Bob)
+
+    Alice->>Token: 1. transfer(Bob, amount) 호출
+    activate Token
+    Token->>Token: 2. 동결 잔액 확인 (balance - frozen >= amount)
+    Token->>Registry: 3. isEligible(Alice) & isEligible(Bob) 검증
+    activate Registry
+    Registry-->>Token: 4. 자격 검증 결과 (true/false)
+    deactivate Registry
+    Token->>Registry: 5. checkTransfer(Alice, Bob, amount) 호출
+    activate Registry
+    Registry-->>Token: 6. 규제 규칙 승인 (true/false)
+    deactivate Registry
+    Token->>Token: 7. 토큰 이동 (_update)
+    Token-->>Bob: 8. Bob 계정으로 토큰 전송 완료
+    deactivate Token
+```
+
+#### 2. Forced Transfer Flow (강제 전송 / 법적 집행 흐름)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Compliance Admin (Regulator)
+    participant Token as uRWA Token (ERC20uRWA)
+    participant Registry as Compliance Registry
+    actor Recipient as 수신자 / 복구 계정
+
+    Admin->>Token: 1. forcedTransfer(TargetAccount, Recipient, amount)
+    activate Token
+    Token->>Token: 2. COMPLIANCE_ROLE 권한 검증
+    Token->>Registry: 3. canTransact(Recipient) (수신자 자격 검증)
+    activate Registry
+    Registry-->>Token: 4. 수신자 자격 승인
+    deactivate Registry
+    Token->>Token: 5. 동결 상태 우회 후 즉시 토큰 이동
+    Token->>Token: 6. TargetAccount의 동결 잔액 재조정
+    Token-->>Admin: 7. ForcedTransfer 이벤트 발행
+    deactivate Token
+```
+
+---
+
+
 ## Project Structure
 
 ```text
