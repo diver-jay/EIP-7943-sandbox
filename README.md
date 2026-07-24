@@ -1,71 +1,113 @@
 # EIP-7943 (uRWA - Universal Real World Asset) Sandbox Study Project
 
-This repository is a test and study project for **EIP-7943 (uRWA - Universal Real-World Asset Interface)**, implementing a standard interface for permissioned, regulatory-compliant assets (e.g., securities, real estate, commodities) on EVM-compatible blockchains. 
+This repository is a comprehensive test, study, and implementation project for **EIP-7943 (uRWA - Universal Real-World Asset Interface)**. It defines a standardized EVM interface for regulatory-compliant, permissioned tokenized assets (e.g., real estate, securities, commodities, tokenized funds).
 
 ---
 
-## Architecture & Flow Diagrams
+## 📌 Background & Core Philosophy: RWA vs. Standard Crypto
 
-### EIP-7943 Architecture
+### "Code is Law" vs. "Law is Law"
+* **Standard Crypto (ERC-20, ERC-721)**: Built around permissionless, pseudonymous ownership. Once a transaction is signed, it is final ("Code is Law").
+* **Real-World Assets (EIP-7943 / uRWA)**: Real-world assets are bound by legal jurisdictions and securities regulations ("Law is Law"). Tokenized securities require strict compliance controls:
+  1. **KYC/AML Verification**: Tokens can only be held by verified individuals/entities.
+  2. **Asset Freezing**: Legal encumbrances, court-ordered freezes, or collateral locks.
+  3. **Forced Transfers**: Court-ordered asset seizures, lost private key recovery, or estate inheritance execution.
+
+---
+
+## 🏗️ Architecture & System Design
+
 ![EIP-7943 Architecture](./EIP-7943.png)
 
----
+### Core Sequence Diagrams
 
-### Core Flowcharts
-
-#### 1. Compliance Transfer Flow (일반 전송 및 규제 검증 흐름)
-
+#### 1. Compliance Transfer Flow
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Alice as 송신자 (Alice)
+    actor Alice as Sender (Alice)
     participant Token as uRWA Token (ERC20uRWA)
     participant Registry as Compliance Registry
-    actor Bob as 수신자 (Bob)
+    actor Bob as Recipient (Bob)
 
-    Alice->>Token: 1. transfer(Bob, amount) 호출
+    Alice->>Token: 1. transfer(Bob, amount)
     activate Token
-    Token->>Token: 2. 동결 잔액 확인 (balance - frozen >= amount)
-    Token->>Registry: 3. isEligible(Alice) & isEligible(Bob) 검증
+    Token->>Token: 2. Check Unfrozen Balance (balance - frozen >= amount)
+    Token->>Registry: 3. Verify isEligible(Alice) & isEligible(Bob)
     activate Registry
-    Registry-->>Token: 4. 자격 검증 결과 (true/false)
+    Registry-->>Token: 4. Eligibility Result (true/false)
     deactivate Registry
-    Token->>Registry: 5. checkTransfer(Alice, Bob, amount) 호출
+    Token->>Registry: 5. checkTransfer(Alice, Bob, amount)
     activate Registry
-    Registry-->>Token: 6. 규제 규칙 승인 (true/false)
+    Registry-->>Token: 6. Compliance Rule Approval (true/false)
     deactivate Registry
-    Token->>Token: 7. 토큰 이동 (_update)
-    Token-->>Bob: 8. Bob 계정으로 토큰 전송 완료
+    Token->>Token: 7. Execute State Update (_update)
+    Token-->>Bob: 8. Transfer Completed
     deactivate Token
 ```
 
-#### 2. Forced Transfer Flow (강제 전송 / 법적 집행 흐름)
-
+#### 2. Forced Transfer Flow (Legal Enforcement)
 ```mermaid
 sequenceDiagram
     autonumber
     actor Admin as Compliance Admin (Regulator)
     participant Token as uRWA Token (ERC20uRWA)
     participant Registry as Compliance Registry
-    actor Recipient as 수신자 / 복구 계정
+    actor Recipient as Recipient / Recovery Wallet
 
     Admin->>Token: 1. forcedTransfer(TargetAccount, Recipient, amount)
     activate Token
-    Token->>Token: 2. COMPLIANCE_ROLE 권한 검증
-    Token->>Registry: 3. canTransact(Recipient) (수신자 자격 검증)
+    Token->>Token: 2. Verify COMPLIANCE_ROLE Permission
+    Token->>Registry: 3. Check canTransact(Recipient)
     activate Registry
-    Registry-->>Token: 4. 수신자 자격 승인
+    Registry-->>Token: 4. Recipient Eligibility Approved
     deactivate Registry
-    Token->>Token: 5. 동결 상태 우회 후 즉시 토큰 이동
-    Token->>Token: 6. TargetAccount의 동결 잔액 재조정
-    Token-->>Admin: 7. ForcedTransfer 이벤트 발행
+    Token->>Token: 5. Bypass Sender Freeze & Execute Transfer
+    Token->>Token: 6. Re-align TargetAccount Frozen Balance
+    Token-->>Admin: 7. Emit ForcedTransfer Event
     deactivate Token
+```
+
+#### 3. Off-Chain KYC ↔ On-Chain Compliance Bridge
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User (Web/App)
+    participant KYC as KYC Provider (Kakao / PASS / Sumsub)
+    participant Server as RWA Platform Backend
+    participant Registry as ComplianceRegistry Contract
+    participant Token as uRWA Token (canTransfer)
+
+    User->>KYC: 1. Complete Identity Verification (Kakao/PASS/Identity Doc)
+    KYC-->>Server: 2. Identity Verification Success Callback
+    Server->>Server: 3. Map User Wallet Address (0x123...) to Verification Result
+    Server->>Registry: 4. setWhitelistStatus(0x123..., true) via Admin Wallet
+    Registry-->>Registry: 5. Store _whitelist[0x123...] = true
+    
+    Note over User, Token: --- Subsequent On-Chain Transfer ---
+    User->>Token: 6. transfer(0x123..., amount)
+    Token->>Token: 7. Internal call to canTransfer()
+    Token->>Registry: 8. Query isEligible(0x123...)
+    Registry-->>Token: 9. Returns true (Whitelisted)
+    Token-->>User: 10. Transfer Succeeded
 ```
 
 ---
 
+## 🚀 Live Sepolia Testnet Deployment
 
-## Project Structure
+The project contracts have been deployed and verified on the Ethereum Sepolia Testnet.
+
+| Contract Name | Contract Type | Sepolia Address | Etherscan Link |
+| :--- | :--- | :--- | :--- |
+| **ComplianceRegistry** | Registry & Rules Engine | `0x0e5C7df25b4F7Ddc8F7E73E95BFD052Be564EF10` | [View on Etherscan](https://sepolia.etherscan.io/address/0x0e5C7df25b4F7Ddc8F7E73E95BFD052Be564EF10) |
+| **ERC20uRWA** | Fungible RWA Token | `0xD9b2F259d04CD0ea18c36791806054F375fDCe9f` | [View on Etherscan](https://sepolia.etherscan.io/address/0xD9b2F259d04CD0ea18c36791806054F375fDCe9f) |
+| **ERC721uRWA** | Non-Fungible RWA Asset (NFT) | `0x5804C129Cc7A5D841429fA1eeB720b7B4Ee290cC` | [View on Etherscan](https://sepolia.etherscan.io/address/0x5804C129Cc7A5D841429fA1eeB720b7B4Ee290cC) |
+| **ERC1155uRWA** | Multi-Token RWA Asset | `0x7E173CEa8B386ab82c153d82e7fB3AF44B37Ab56` | [View on Etherscan](https://sepolia.etherscan.io/address/0x7E173CEa8B386ab82c153d82e7fB3AF44B37Ab56) |
+
+---
+
+## 🛠️ Project Structure & Scripts
 
 ```text
 EIP-7943/
@@ -77,54 +119,70 @@ EIP-7943/
 │   ├── ERC20uRWA.sol                  # Fungible uRWA Token implementation (ERC-20)
 │   ├── ERC721uRWA.sol                 # Non-Fungible uRWA Token implementation (ERC-721)
 │   ├── ERC1155uRWA.sol                # Multi-Token uRWA Token implementation (ERC-1155)
-│   └── ComplianceRegistry.sol         # Mock KYC registry for rules & whitelist gating
+│   └── ComplianceRegistry.sol         # KYC registry for whitelist & jurisdiction rules
+├── scripts/
+│   ├── create-wallet.js               # Auto-generate dev Web3 wallet & update .env
+│   ├── deploy.js                      # Deployment script for all contracts
+│   ├── test-erc165.js                 # IERC165 interface introspection test
+│   └── test-eip7943-features.js       # Live Sepolia EIP-7943 feature scenario test
 ├── test/
-│   └── uRWA.test.js                   # Comprehensive Hardhat tests for uRWA behaviors
-├── hardhat.config.js                  # Solidity compiler & Cancun EVM version setup
+│   └── uRWA.test.js                   # 17 Hardhat unit tests for local EVM
+├── hardhat.config.js                  # Solidity compiler (0.8.24, Cancun EVM)
 ├── package.json
 └── README.md
 ```
 
 ---
 
-## Quick Start
+## 🚦 Quick Start & Execution Commands
 
 ### 1. Install Dependencies
-Install all required node packages and OpenZeppelin libraries:
-
 ```bash
 npm install
 ```
 
 ### 2. Compile Contracts
-Compile all Solidity contracts. The project uses Solidity version `0.8.24` and targets `cancun` to support the `mcopy` EVM instruction used in OpenZeppelin Contracts v5.
-
 ```bash
 npm run compile
 ```
 
-### 3. Run Tests
-Execute the 17 integration tests verifying compliance rules, freezing mechanics, forced transfers, and ERC-165 support:
-
+### 3. Run Local Unit Tests (17/17 Passed)
 ```bash
 npm test
 ```
 
+### 4. Developer Wallet Setup (No MetaMask Required)
+Automatically generate a new developer wallet and save its private key to `.env`:
+```bash
+npm run create-wallet
+```
+
+### 5. Deploy to Sepolia Testnet
+```bash
+npm run deploy:sepolia
+```
+
+### 6. Run On-Chain EIP-7943 Feature Scenario Tests
+Test KYC minting restrictions, asset freezing, forced transfers, and jurisdiction blocks live on Sepolia:
+```bash
+npm run test-rwa
+```
+
 ---
 
-## Key Features (EIP-7943 Primitives)
+## 🔬 EIP-7943 Primitives Summary
 
-1. **User Eligibility Control (Gating & Whitelisting)**
-   - `canTransact(address)`: Checks if an account is eligible to hold or interact with tokens (e.g., has passed KYC/AML checks).
-   - `canTransfer(address, address, uint256)`: Pre-flight function to check whether a transfer between two addresses is permitted under current regulatory rules.
+1. **User Eligibility Control (Whitelisting & Gating)**
+   - `canTransact(address)`: Returns `true` if an account is eligible to hold tokens (KYC/AML verified).
+   - `canTransfer(address from, address to, uint256 amount)`: Pre-flight check to verify if a transfer is permitted under compliance rules.
 
-2. **Asset Freezing (Operational Controls)**
-   - `setFrozenTokens(address, uint256)`: Freezes a specific amount of tokens for an account.
-   - `getFrozenTokens(address)`: Returns the amount of frozen tokens for an account.
-   - The token holder is only permitted to transfer their **unfrozen balance** (`balanceOf(user) - getFrozenTokens(user)`).
+2. **Asset Freezing (Operational & Encumbrance Lockup)**
+   - `setFrozenTokens(address account, uint256 amount)`: Locks a specific amount of tokens for an account.
+   - `getFrozenTokens(address account)`: Returns the amount of frozen tokens.
+   - Users can only transfer their **unfrozen balance** (`balanceOf(user) - getFrozenTokens(user)`).
 
-3. **Forced Transfer (Law Enforcement & Recovery)**
-   - `forcedTransfer(address, address, uint256)`: Allows an authorized entity (e.g., a regulator or compliance officer) to move assets unilaterally without the token holder's signature. This is used for lost key recovery, compliance audits, or court-ordered asset seizures. Forced transfers bypass frozen checks but still check the destination's eligibility.
+3. **Forced Transfer (Regulatory Enforcement & Key Recovery)**
+   - `forcedTransfer(address from, address to, uint256 amount)`: Allows an authorized entity (`COMPLIANCE_ROLE`) to move tokens without sender signature. Used for lost key recovery, court orders, or asset seizures.
 
-4. **ERC-165 Introspection**
-   - Implements `supportsInterface` so that external routers, bridges, and custodians can dynamically inspect which uRWA interface variant (Fungible, NonFungible, MultiToken) is implemented.
+4. **ERC-165 Interface Introspection**
+   - Implements `supportsInterface(bytes4)` to allow external protocols, custody platforms, and bridges to dynamically detect EIP-7943 compliance (`IERC165` ID `0x01ffc9a7` & `IERC7943Fungible` ID `0x29388973`).
